@@ -11,11 +11,24 @@ def WFromTraining(nclasses, trainingData, solution, maxiter = 100, alpha = 0.1):
 
     paddedData = (np.append((trainingData.T),np.ones(1,nsamples))).T # add ones to the end of the feature samples for the modified form
 
-    W = np.ones((nclasses, nfeatures + 1))# Initialize W (randomly, ones, identity?). Not the added column for the modified form
+    W = np.ones((nclasses, nfeatures + 1)) # Initialize W (randomly, ones, identity?). Not the added column for the modified form
     g = np.empty(nsamples,nclasses)
-    for totalIt in range(maxiter): #perharps also another termination criteria?
+    for totalIt in range(maxiter): # perharps also another termination criteria?
+        nabW = np.zeros(nclasses, nfeatures + 1)
+
         for sampleIt in range(nsamples):
-            xCurrent = W*((paddedData[sampleIt,:]).T) # z_i = W * x_i
+            xCurrent = np.dot(W,(paddedData[sampleIt,:]).T) # z_i = W * x_i
             for classIt in range(nclasses):
                 g[sampleIt, classIt] = sigmoid(xCurrent[classIt]) # g_i = sigmoid(z_i)
+
+            g_k = (g[sampleIt,:]).T
+            t_k = (solution[sampleIt,:]).T
+            x_k = (paddedData[sampleIt,:]).T
+
+            # Sum element [(g_k-t_k)◦g_k◦(1-g_k)]x_k.T
+            nabW += np.dot(np.multiply(np.multiply(g_k-t_k,g_k),np.ones((nclasses,1))-g_k),x_k.T)
+            # Summed up over nsamples to obtain ∇_W MSE
+
+        W = W - alpha * nabW # W(m) = W(m-1) - α ∇_W MSE
+
     print('heyoo')
