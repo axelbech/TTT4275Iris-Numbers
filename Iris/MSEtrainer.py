@@ -4,10 +4,13 @@ import math
 def sigmoid(x):
     return 1/(1 + np.exp(-x))
 
-def WFromTraining(nclasses, trainingData, solution, maxiter = 100, alpha = 0.1): # training data must be on the format ???
+def WFromTraining(trainingData, solution, maxiter = 100, alpha = 0.1): # training data must be on the format ???
     dataDims = np.shape(trainingData)
     nsamples = dataDims[0]
     nfeatures = dataDims[1]
+
+    solDims = np.shape(solution)
+    nclasses = solDims[1]
 
     paddedData = (np.append((trainingData.T),np.ones(1,nsamples))).T # add ones to the end of the feature samples for the modified form
 
@@ -30,5 +33,5 @@ def WFromTraining(nclasses, trainingData, solution, maxiter = 100, alpha = 0.1):
             # Summed up over nsamples to obtain ∇_W MSE
 
         W = W - alpha * nabW # W(m) = W(m-1) - α ∇_W MSE
-
-    print('heyoo')
+    
+    return W # Returns W after terminating
