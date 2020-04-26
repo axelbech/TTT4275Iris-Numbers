@@ -12,12 +12,13 @@ def WFromTraining(trainingData, solution, maxiter = 100, alpha = 0.1): # trainin
     solDims = np.shape(solution)
     nclasses = solDims[1]
 
-    paddedData = (np.append((trainingData.T),np.ones(1,nsamples))).T # add ones to the end of the feature samples for the modified form
+    paddedData = (np.concatenate(((trainingData.T),np.ones((1,nsamples))),axis=0)).T # add ones to the end of the feature samples for the modified form
+    print(paddedData)
 
     W = np.ones((nclasses, nfeatures + 1)) # Initialize W (randomly, ones, identity?). Not the added column for the modified form
-    g = np.empty(nsamples,nclasses)
+    g = np.empty((nsamples,nclasses))
     for totalIt in range(maxiter): # perharps also another termination criteria?
-        nabW = np.zeros(nclasses, nfeatures + 1)
+        nabW = np.zeros((nclasses, nfeatures + 1))
 
         for sampleIt in range(nsamples):
             xCurrent = np.dot(W,(paddedData[sampleIt,:]).T) # z_i = W * x_i
