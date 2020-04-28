@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 nSamples = 6000
-nTests = 1000
+nTests = 10
 nClasses = 10
 
 with open('Data/train_images.bin','rb') as binaryFile:
@@ -54,61 +54,148 @@ def confMatrix(tstAns,tstSol):
 
     return confMatrix, nMisses/nSamples, missIndices
 
+def accumDist(samples,clusters,sampleOwnership):    # For one class
+    dist = 0
+    dataDims = np.shape(samples)
+    nSamples = dataDims[0]
+    for sampleIt in range(nSamples):
+        currentOwner = sampleOwnership[sampleIt]
+        devFromRef = samples[sampleIt] - clusters[currentOwner]
+        dist += np.sum(np.multiply(devFromRef,devFromRef))
+
+    return dist
+
+
 def clusters(img, lb, maxClusters = 64):
     dataDims = np.shape(img)
     nSamples = dataDims[0]
 
-    solDims = np.shape(lb)
-    nClasses = solDims[1]
+    nClasses = int(lb.max()+1)
 
-    clusters = np.empty((maxClusters*nClasses),784)
+    # solDims = np.shape(lb)
+    # nClasses = solDims[0]
+
+    clusters = 500 * np.ones((maxClusters*nClasses,784)) # To avoid classifying a sample to a 'uninitialized' cluster, ensure large distance
     clusterSol = np.empty(maxClusters*nClasses)
     for classIt in range(nClasses):
         for clusterIt in range(maxClusters):
-            clusterSol[maxClusters*classIt + clusterIt] = classIt
+            clusterSol[maxClusters*classIt + clusterIt] = classIt   # The label corresponding to the clusters we will end up with
 
     sortedImg = sortedImage(img,lb)
     _, classCount = np.unique(lb, return_counts = True)
 
     startIndex = 0
 
-    for classIt in range(nClasses):
-        classLength = classCount[classIt]
-        currentSamples = sortedImg[startIndex:classLength]
+    for classIt in range(nClasses): # Cluster creation for each class individually
+        classLength = classCount[classIt]   # Amount of samples for current class
+        print('Current class is : ', classIt, ' With ', classLength, ' samples of the current class')
+        currentSamples = sortedImg[startIndex:startIndex+classLength]  # Samples for current class
+        currentClusters = clusters[maxClusters*classIt:maxClusters*classIt+maxClusters] # Clusters for current class
         
         # Alg from compendium start
 
+        for sampleIt in range(classLength):
+            currentClusters[0] += currentSamples[sampleIt]
+        currentClusters[0] = currentClusters[0] / classLength   # Creating first cluster/reference
+
+        for amountOfClustersIt in range(1,maxClusters+1):   # We start out with one cluster and end with maxClusters
+            prevAccDist = 123456789 # Arbitrary, just needs to be big
+            mostPopularCluster = 0  # The cluster with the most associated samples
+            while True: # Contains the steps 3,4,5
+                sampleOwnership = np.empty(classLength,dtype=np.int) # List contains the cluster that the index belongs to : array[sample] = cluster
+                eclDst = np.empty(maxClusters) # A samples distances to the clusters
+                for sampleIt in range(classLength): # Iterate over current class' samples
+                    for clusterIt in range(maxClusters): # Iterate over the clusters
+                        devFromRef = [sampleIt] - ref[classIt]
+                        eclDst[clusterIt] = np.sum(np.multiply(devFromRef,devFromRef))
+                    currentSampleCluster = np.argmin(eclDst) # What cluster the current sample belongs to
+                    sampleOwnership[sampleIt] = currentSampleCluster
+                currAccDist = accumDist(currentSamples,currentClusters,sampleOwnership)
+
+                if (currAccDist/prevAccDist) > 0.98:
+                    break
+
+                # clusterFq = np.bincount(sampleOwnership)    # The amount of samples classified with each cluster : array[cluster] = nsamples
+
+                maxHits = 0
+                
+                for clusterIt in range(amountOfClustersIt):
+                    # currentClusterFq = clusterFq[clusterIt] # Frequency of matching with current cluster
+                    currentClusters[clusterIt] = np.zeros(784) # Reset cluster mean values so we can recalculate it
+                    hits = 0    # Amount of samples classified with current cluster
+                    
+                    for sampleIt in range(classLength):
+                        if sampleOwnership[sampleIt] == clusterIt:
+                            currentClusters[clusterIt] += currentSamples[sampleIt] # Add to mean
+                            hits += 1   # Found a sample that matched with our cluster
+                            if hits > maxHits:
+                                maxHits = hits
+                                mostPopularCluster = clusterIt
+                    currentClusters[clusterIt] = currentClusters[clusterIt] / hits  # Finally calculate mean by dividing by amount of samples
+
+            if amountOfClustersIt < maxClusters:
+                currentClusters[amountOfClustersIt] = currentClusters[mostPopularCluster] + (0.2*np.random.rand(784)-0.1) # We 'split' : we get a new cluster
+
+        for clusterIt in range(maxClusters):    # Stitch back together the clusters one class at a time
+            clusters[maxClusters*classIt+clusterIt] = currentClusters[clusterIt]
 
         # Alg from compendium end
 
         startIndex += classLength
+
+    return clusters, clusterSol
 
 def sortedImage(img,lb):
     dataDims = np.shape(img)
     nSamples = dataDims[0]
 
     solDims = np.shape(lb)
-    nClasses = solDims[1]
+    nClasses = solDims[0]
 
-    sortedImg = np.empty((nSamples,784))
+    sortedImg = np.empty((nSamples,784))    # Same length as sample array as it has the same values in a different order
     classIndices = np.empty(0)
     for classIt in range(nClasses):
         classIndices = np.append(classIndices,np.argwhere(lb == classIt))
 
     for sampleIt in range(nSamples):
-        sortedImg[sampleIt] = img[classIndices[sampleIt]]
+        sortedImg[sampleIt] = img[int(classIndices[sampleIt])]
 
     return sortedImg
 
 
 
-a = np.empty(0)
+clusters, clusterSol = clusters(img,lb,maxClusters=4)
 
-print(np.append(a,[[15],[18]]))
+nClusters = (np.shape(clusters))[0]
 
+eclDst = np.empty(nClusters)
 
+match = np.empty(nTests)
 
+tstAns = np.empty(nTests)
 
+for testIt in range(nTests):
+    for sampleIt in range(nClusters):
+        devFromSample = tstimg[testIt] - clusters[sampleIt]
+        eclDst[sampleIt] = np.sum(np.multiply(devFromSample,devFromSample))
+    closestMatch = np.argmin(eclDst)
+    match[testIt] = closestMatch
+    tstAns[testIt] = lb[closestMatch]
+
+answerPlt = np.reshape(tstimg[7],(28,28))
+solutionPlt = np.reshape(clusters[int(match[7])],(28,28))
+
+plt.suptitle('??? classified number')
+
+plt.subplot(1,2,1)
+plt.imshow(answerPlt,cmap='gray',vmin=0,vmax=255)
+plt.title('This test image matched')
+
+plt.subplot(1,2,2)
+plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
+plt.title('With this reference image')
+
+plt.show()
 
 # print('Our answers are : \n', tstAns[0:24])
 # print('The real answers are : \n', tstlb[0:24])
