@@ -19,7 +19,6 @@ def confMatrix(tstAns,tstSol):
             nMisses += 1
             missIndices = np.append(missIndices, sampleIt)
 
-
     return confMatrix, nMisses/nSamples, missIndices
 
 with open('Data/train_images.bin','rb') as binaryFile:
