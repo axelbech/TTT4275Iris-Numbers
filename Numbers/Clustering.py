@@ -2,8 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 nSamples = 6000
-nTests = 10
+nTests = 500
 nClasses = 10
+nClusters = 64
 
 with open('Data/train_images.bin','rb') as binaryFile:
     imgB = binaryFile.read()
@@ -176,6 +177,7 @@ def NN(testSamples,templates,templateLabels):
         for templateIt in range(nTemplates):
             devFromSample = tstimg[testIt] - templates[templateIt]
             eclDst[templateIt] = np.sum(np.multiply(devFromSample,devFromSample))
+            # eclDst[templateIt] = np.sum(np.absolute(devFromSample)) # OBS alternate distance
         closestMatch = np.argmin(eclDst)    # Index of closest template
         match[testIt] = closestMatch    # Template index that matched to current test image
         tstAns[testIt] = templateLabels[closestMatch]
@@ -198,6 +200,7 @@ def KNN(testSamples,templates,templateLabels,K=7):
         for templateIt in range(nTemplates):
             devFromSample = tstimg[testIt] - templates[templateIt]
             eclDst[templateIt] = np.sum(np.multiply(devFromSample,devFromSample))
+            # eclDst[templateIt] = np.sum(np.absolute(devFromSample)) # OBS alternate distance
         
         # Code particular for KNN (vs NN) start
 
@@ -218,7 +221,7 @@ def KNN(testSamples,templates,templateLabels,K=7):
         for kIt in range(K):
             if (classFq[int(templateLabels[kMatches[kIt]])] == maxOccurrences):
                 bestMatch = kMatches[kIt]   # Matches with 'avaliable' template with lowest distance
-                print('KNN worked, classFq = ', classFq)
+                # print('KNN worked, classFq = ', classFq)
                 break
 
         # Code particular for KNN (vs NN) start
@@ -228,40 +231,61 @@ def KNN(testSamples,templates,templateLabels,K=7):
 
     return tstAns, match
 
-clusters, clusterSol = clusters(img,lb,maxClusters=7)
-nClusters = (np.shape(clusters))[0]
+# Code for saving the cluster data
 
-tstAnsandMatch = NN(tstimg,clusters,clusterSol)
-NNtstAns = tstAnsandMatch[0]
-NNmatch = tstAnsandMatch[1]
+# clusters, clusterSol = clusters(img,lb,maxClusters=nClusters)
+
+# with open('Data/cluster_images.bin','wb') as binaryFile:
+#     binaryFile.write((clusters.astype(np.uint8)).tobytes())
+
+# with open('Data/cluster_labels.bin','wb') as binaryFile:
+#     binaryFile.write((clusterSol.astype(np.uint8)).tobytes())
+
+
+# Code for opening the cluster data
+
+with open('Data/cluster_images.bin','rb') as binaryFile:
+    clustersB = binaryFile.read()
+
+with open('Data/cluster_labels.bin','rb') as binaryFile:
+    clusterSolB = binaryFile.read()
+
+clusterSol = np.frombuffer(clusterSolB, dtype=np.uint8)
+clusters = np.reshape(np.frombuffer(clustersB, dtype=np.uint8), (nClusters*nClasses,784))
+
+# Evaluation
+
+# tstAnsandMatch = NN(tstimg,img,lb)
+# NNtstAns = tstAnsandMatch[0]
+# NNmatch = tstAnsandMatch[1]
 
 tstAnsandMatch = KNN(tstimg,clusters,clusterSol)
 KNNtstAns = tstAnsandMatch[0]
 KNNmatch = tstAnsandMatch[1]
 
-print('NN answers:\n',NNtstAns)
-print('KNN answers:\n',NNtstAns)
+# print('NN answers:\n',NNtstAns)
+# print('KNN answers:\n',NNtstAns)
 
-# confMerrR = confMatrix(tstAns,tstlb)
-# print('Confusion matrix with ',nClusters,' references & ',nTests,' tests : \n',confMerrR[0])
-# print('Error rate : ',confMerrR[1])
+confMerrR = confMatrix(KNNtstAns,tstlb)
+print('Confusion matrix with ',nClusters*nClasses,' references & ',nTests,' tests : \n',confMerrR[0])
+print('Error rate : ',confMerrR[1])
 
-# answerPlt = np.reshape(tstimg[7],(28,28))
-# solutionPlt = np.reshape(clusters[int(match[7])],(28,28))
+answerPlt = np.reshape(tstimg[55],(28,28))
+solutionPlt = np.reshape(clusters[int(KNNmatch[55])],(28,28))
 
-# plt.suptitle('??? classified number')
+plt.suptitle('??? classified number')
 
-# plt.subplot(1,2,1)
-# plt.imshow(answerPlt,cmap='gray',vmin=0,vmax=255)
-# plt.title('This test image matched')
+plt.subplot(1,2,1)
+plt.imshow(answerPlt,cmap='gray',vmin=0,vmax=255)
+plt.title('This test image matched')
 
-# plt.subplot(1,2,2)
-# plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
-# plt.title('With this reference image')
+plt.subplot(1,2,2)
+plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
+plt.title('With this reference image')
 
-# plt.show()
+plt.show()
 
-# print('Our answers are : \n', tstAns[0:24])
+# print('Our answers are : \n', KNNtstAns[0:24])
 # print('The real answers are : \n', tstlb[0:24])
 
 # plt.imshow(np.reshape(tstimg[11],(28,28)),cmap='gray',vmin=0,vmax=255)
