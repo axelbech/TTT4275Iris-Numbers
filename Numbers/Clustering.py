@@ -20,8 +20,8 @@ with open('Data/test_labels.bin','rb') as binaryFile:
 img = np.reshape(np.frombuffer(imgB[16:16+784*nSamples], dtype=np.uint8), (nSamples,784))
 lb = np.frombuffer(lbB[8:nSamples+8], dtype=np.uint8)
 
-tstimg = np.reshape(np.frombuffer(tstimgB[16:16+784*nSamples], dtype=np.uint8), (nSamples,784))
-tstlb = np.frombuffer(tstlbB[8:nSamples+8], dtype=np.uint8)
+tstimg = np.reshape(np.frombuffer(tstimgB[16:16+784*nTests], dtype=np.uint8), (nTests,784))
+tstlb = np.frombuffer(tstlbB[8:nTests+8], dtype=np.uint8)
 
 ref = np.zeros((nClasses,784))
 
@@ -112,8 +112,10 @@ def clusters(img, lb, maxClusters = 64):
                     sampleOwnership[sampleIt] = currentSampleCluster
                 currAccDist = accumDist(currentSamples,currentClusters,sampleOwnership)
 
-                if (currAccDist/prevAccDist) > 0.98:
+                if (currAccDist/prevAccDist) > 0.99:
                     break
+
+                prevAccDist = currAccDist
 
                 # clusterFq = np.bincount(sampleOwnership)    # The amount of samples classified with each cluster : array[cluster] = nsamples
 
@@ -163,39 +165,101 @@ def sortedImage(img,lb):
     return sortedImg
 
 
+def NN(testSamples,templates,templateLabels):
+    nTemplates = (np.shape(templates))[0]
+    nTests = (np.shape(testSamples))[0]
+    eclDst = np.empty(nTemplates)
+    match = np.empty(nTests)
+    tstAns = np.empty(nTests)
 
-clusters, clusterSol = clusters(img,lb,maxClusters=4)
+    for testIt in range(nTests):
+        for templateIt in range(nTemplates):
+            devFromSample = tstimg[testIt] - templates[templateIt]
+            eclDst[templateIt] = np.sum(np.multiply(devFromSample,devFromSample))
+        closestMatch = np.argmin(eclDst)    # Index of closest template
+        match[testIt] = closestMatch    # Template index that matched to current test image
+        tstAns[testIt] = templateLabels[closestMatch]
 
+    return tstAns, match
+
+
+def KNN(testSamples,templates,templateLabels,K=7):
+    nTemplates = (np.shape(templates))[0]
+    nTests = (np.shape(testSamples))[0]
+    match = np.empty(nTests)
+    tstAns = np.empty(nTests)
+    nClasses = int(templateLabels.max())
+
+    eclDst = np.empty(nTemplates)
+    kMatches = np.empty(K,dtype=int)  # The K closest templates
+
+    for testIt in range(nTests):
+        
+        for templateIt in range(nTemplates):
+            devFromSample = tstimg[testIt] - templates[templateIt]
+            eclDst[templateIt] = np.sum(np.multiply(devFromSample,devFromSample))
+        
+        # Code particular for KNN (vs NN) start
+
+        classFq = np.zeros(nClasses+1)    # Amount of each class in kMatches
+        # classAllowed = np.zeros(nClasses+1)   # Whether or not a class has the same frequency as the max frequency
+
+        for kIt in range(K):
+            closestMatch = np.argmin(eclDst)    # Index of closest template of the remaining distances
+            kMatches[kIt] = closestMatch
+            classFq[int(templateLabels[closestMatch])] += 1
+            eclDst[closestMatch] = 123456789  # Must be high so sample isnt picked out again by argmin
+
+        maxOccurrences = classFq.max()  # Amount of times most common class has occurred
+        # for classIt in range(nClasses): # This is to make sure things go smoothly if more two classes have the max amount of occurrences
+        #     if classFq[classIt] == maxOccurrences:
+        #         classAllowed[classIt] = 1
+
+        for kIt in range(K):
+            if (classFq[int(templateLabels[kMatches[kIt]])] == maxOccurrences):
+                bestMatch = kMatches[kIt]   # Matches with 'avaliable' template with lowest distance
+                print('KNN worked, classFq = ', classFq)
+                break
+
+        # Code particular for KNN (vs NN) start
+
+        match[testIt] = bestMatch    # Template index that matched to current test image
+        tstAns[testIt] = templateLabels[closestMatch]
+
+    return tstAns, match
+
+clusters, clusterSol = clusters(img,lb,maxClusters=7)
 nClusters = (np.shape(clusters))[0]
 
-eclDst = np.empty(nClusters)
+tstAnsandMatch = NN(tstimg,clusters,clusterSol)
+NNtstAns = tstAnsandMatch[0]
+NNmatch = tstAnsandMatch[1]
 
-match = np.empty(nTests)
+tstAnsandMatch = KNN(tstimg,clusters,clusterSol)
+KNNtstAns = tstAnsandMatch[0]
+KNNmatch = tstAnsandMatch[1]
 
-tstAns = np.empty(nTests)
+print('NN answers:\n',NNtstAns)
+print('KNN answers:\n',NNtstAns)
 
-for testIt in range(nTests):
-    for sampleIt in range(nClusters):
-        devFromSample = tstimg[testIt] - clusters[sampleIt]
-        eclDst[sampleIt] = np.sum(np.multiply(devFromSample,devFromSample))
-    closestMatch = np.argmin(eclDst)
-    match[testIt] = closestMatch
-    tstAns[testIt] = lb[closestMatch]
+# confMerrR = confMatrix(tstAns,tstlb)
+# print('Confusion matrix with ',nClusters,' references & ',nTests,' tests : \n',confMerrR[0])
+# print('Error rate : ',confMerrR[1])
 
-answerPlt = np.reshape(tstimg[7],(28,28))
-solutionPlt = np.reshape(clusters[int(match[7])],(28,28))
+# answerPlt = np.reshape(tstimg[7],(28,28))
+# solutionPlt = np.reshape(clusters[int(match[7])],(28,28))
 
-plt.suptitle('??? classified number')
+# plt.suptitle('??? classified number')
 
-plt.subplot(1,2,1)
-plt.imshow(answerPlt,cmap='gray',vmin=0,vmax=255)
-plt.title('This test image matched')
+# plt.subplot(1,2,1)
+# plt.imshow(answerPlt,cmap='gray',vmin=0,vmax=255)
+# plt.title('This test image matched')
 
-plt.subplot(1,2,2)
-plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
-plt.title('With this reference image')
+# plt.subplot(1,2,2)
+# plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
+# plt.title('With this reference image')
 
-plt.show()
+# plt.show()
 
 # print('Our answers are : \n', tstAns[0:24])
 # print('The real answers are : \n', tstlb[0:24])
