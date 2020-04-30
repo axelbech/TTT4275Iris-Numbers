@@ -4,7 +4,7 @@ import math
 def sigmoid(x):
     return 1/(1 + np.exp(-x))
 
-def WFromTraining(trainingData, solution, maxiter = 300, alpha = 0.1): # training data must be on the format ???
+def WFromTraining(trainingData, solution, maxiter, alpha = 0.1): # training data must be on the format ???
     dataDims = np.shape(trainingData)
     nsamples = dataDims[0]
     nfeatures = dataDims[1]
@@ -33,5 +33,17 @@ def WFromTraining(trainingData, solution, maxiter = 300, alpha = 0.1): # trainin
             # Summed up over nsamples to obtain ∇_W MSE
 
         W = W - alpha * nabW # W(m) = W(m-1) - α ∇_W MSE
-    
+
+        if totalIt == (maxiter-1):
+            for i in range(90):
+                # if (i == 0) or (i == 30) or (i == 60):
+                    # print('i = ', i, '\n')
+
+                xSample = (np.array(paddedData[i,:]))
+                xSample[nfeatures] = 1
+                
+                testSample = np.dot(W, xSample)
+
+                # print('Our xTest = ', sigmoid(testSample), '\n')
+            # print('Iteration = ', totalIt, '\n')
     return W # Returns W after terminating
