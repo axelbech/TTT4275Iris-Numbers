@@ -242,6 +242,3 @@ plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
 plt.title('With this reference image')
 
 plt.show()
-
-# print('Our answers are : \n', KNNtstAns[0:24])
-# print('The real answers are : \n', tstlb[0:24])

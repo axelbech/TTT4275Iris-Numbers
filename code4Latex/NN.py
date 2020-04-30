@@ -45,40 +45,15 @@ for testIt in range(nTests):
     tstAns[testIt] = lb[closestMatch]
 
 confMerrR = confMatrix(tstAns,tstlb)
-
-print('Indices of misses : \n',(confMerrR[2])[0:24])
 print('Confusion matrix with ',nSamples,' training samples & ',nTests,' tests : \n',confMerrR[0])
 print('Error rate : ',confMerrR[1])
 
 answerPlt = np.reshape(tstimg[0],(28,28))
 solutionPlt = np.reshape(img[int(match[0])],(28,28))
-
-plt.suptitle('Correctly classified numbers')
-
-plt.subplot(3,2,1)
+plt.subplot(1,2,1)
 plt.imshow(answerPlt,cmap='gray',vmin=0,vmax=255)
-plt.title('These test images matched')
-
-plt.subplot(3,2,2)
+plt.title('This test image matched')
+plt.subplot(1,2,2)
 plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
-plt.title('With these training images')
-
-answerPlt = np.reshape(tstimg[1],(28,28))
-solutionPlt = np.reshape(img[int(match[1])],(28,28))
-
-plt.subplot(3,2,3)
-plt.imshow(answerPlt,cmap='gray',vmin=0,vmax=255)
-
-plt.subplot(3,2,4)
-plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
-
-answerPlt = np.reshape(tstimg[7],(28,28))
-solutionPlt = np.reshape(img[int(match[7])],(28,28))
-
-plt.subplot(3,2,5)
-plt.imshow(answerPlt,cmap='gray',vmin=0,vmax=255)
-
-plt.subplot(3,2,6)
-plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
-
+plt.title('With this training image')
 plt.show()
