@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from printConfusion import print_confusion
 
 nSamples = 1000
 nTests = 200
@@ -49,6 +50,8 @@ confMerrR = confMatrix(tstAns,tstlb)
 print('Indices of misses : \n',(confMerrR[2])[0:24])
 print('Confusion matrix with ',nSamples,' training samples & ',nTests,' tests : \n',confMerrR[0])
 print('Error rate : ',confMerrR[1])
+
+print_confusion(confMerrR[0])
 
 answerPlt = np.reshape(tstimg[0],(28,28))
 solutionPlt = np.reshape(img[int(match[0])],(28,28))

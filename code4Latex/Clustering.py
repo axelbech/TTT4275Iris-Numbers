@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 nSamples = 6000
-nTests = 500
+nTests = 200
 nClasses = 10
 nClusters = 64
 
