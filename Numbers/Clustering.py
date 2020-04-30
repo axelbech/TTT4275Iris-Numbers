@@ -5,6 +5,7 @@ nSamples = 6000
 nTests = 500
 nClasses = 10
 nClusters = 64
+ourK = 7
 
 with open('Data/train_images.bin','rb') as binaryFile:
     imgB = binaryFile.read()
@@ -144,7 +145,6 @@ def NN(testSamples,templates,templateLabels):
         closestMatch = np.argmin(eclDst)    # Index of closest template
         match[testIt] = closestMatch    # Template index that matched to current test image
         tstAns[testIt] = templateLabels[closestMatch]
-    print(eclDst)
     return tstAns, match
 
 def KNN(testSamples,templates,templateLabels,K=7):
@@ -217,29 +217,36 @@ tstAnsandMatch = NN(tstimg,clusters,clusterSol)
 NNtstAns = tstAnsandMatch[0]
 NNmatch = tstAnsandMatch[1]
 
-tstAnsandMatch = KNN(tstimg,clusters,clusterSol)
+tstAnsandMatch = KNN(tstimg,clusters,clusterSol,K=ourK)
 KNNtstAns = tstAnsandMatch[0]
 KNNmatch = tstAnsandMatch[1]
 
 # print('NN answers:\n',NNtstAns)
 # print('KNN answers:\n',NNtstAns)
 
-confMerrR = confMatrix(KNNtstAns,tstlb)
-print('Confusion matrix with ',nClusters*nClasses,' references & ',nTests,' tests : \n',confMerrR[0])
-print('Error rate : ',confMerrR[1])
+NNconfMerrR = confMatrix(NNtstAns,tstlb)
+print('NN Confusion matrix with ',nClusters*nClasses,' references & ',nTests,' tests : \n',NNconfMerrR[0])
+print('Error rate : ',NNconfMerrR[1])
 
-answerPlt = np.reshape(tstimg[400],(28,28))
-solutionPlt = np.reshape(clusters[int(KNNmatch[400])],(28,28))
+KNNconfMerrR = confMatrix(KNNtstAns,tstlb)
+print('KNN confusion matrix with ',nClusters*nClasses,' references & ',nTests,' tests : \n',KNNconfMerrR[0])
+print('Error rate : ',KNNconfMerrR[1])
 
-plt.suptitle('??? classified number')
+# answerPlt = np.reshape(tstimg[3],(28,28))
+# solutionPlt = np.reshape(clusters[int(NNmatch[3])],(28,28))
+
+answerPlt = np.reshape(img[110],(28,28))
+solutionPlt = np.reshape(clusters[576],(28,28))
+
+# plt.suptitle('')
 
 plt.subplot(1,2,1)
 plt.imshow(answerPlt,cmap='gray',vmin=0,vmax=255)
-plt.title('This test image matched')
+plt.title('Image from original set')
 
 plt.subplot(1,2,2)
 plt.imshow(solutionPlt,cmap='gray',vmin=0,vmax=255)
-plt.title('With this reference image')
+plt.title('Reference from clustering')
 
 plt.show()
 
