@@ -9,13 +9,22 @@ samplesAndSolutions = importdata(nsamples = 150, nclasses = 3, nfeatures = 4, fi
 samples = samplesAndSolutions[0]
 solutions = samplesAndSolutions[1]
 
-trainingSamples = np.concatenate((samples[0:30,:],np.concatenate((samples[50:80,:],samples[100:130,:]),axis=0)),axis=0)
-testingSamples = np.concatenate((samples[30:50,:],np.concatenate((samples[80:100,:],samples[130:150,:]),axis=0)),axis=0)
+trainingSamples1 = np.concatenate((samples[0:30,:],np.concatenate((samples[50:80,:],samples[100:130,:]),axis=0)),axis=0)
+testingSamples1 = np.concatenate((samples[30:50,:],np.concatenate((samples[80:100,:],samples[130:150,:]),axis=0)),axis=0)
 # First 30 for training, last 20 for testing
-trainingSolutions = np.concatenate((solutions[0:30,:],np.concatenate((solutions[50:80,:],solutions[100:130,:]),axis=0)),axis=0)
-testingSolutions = np.concatenate((solutions[30:50,:],np.concatenate((solutions[80:100,:],solutions[130:150,:]),axis=0)),axis=0)
+trainingSolutions1 = np.concatenate((solutions[0:30,:],np.concatenate((solutions[50:80,:],solutions[100:130,:]),axis=0)),axis=0)
+testingSolutions1 = np.concatenate((solutions[30:50,:],np.concatenate((solutions[80:100,:],solutions[130:150,:]),axis=0)),axis=0)
 
-W = WFromTraining(trainingSamples, trainingSolutions, alpha=0.01, maxiter=1000)
+trainingSamples2 = np.concatenate((samples[20:50,:],np.concatenate((samples[70:100,:],samples[120:150,:]),axis=0)),axis=0)
+testingSamples2 = np.concatenate((samples[0:20,:],np.concatenate((samples[50:70,:],samples[100:120,:]),axis=0)),axis=0)
+# Last 30 for training, first 20 for testing
+trainingSolutions2 = np.concatenate((solutions[20:50,:],np.concatenate((solutions[70:100,:],solutions[120:150,:]),axis=0)),axis=0)
+testingSolutions2 = np.concatenate((solutions[0:20,:],np.concatenate((solutions[50:70,:],solutions[100:120,:]),axis=0)),axis=0)
+
+
+
+W1 = WFromTraining(trainingSamples1, trainingSolutions1, alpha=0.01, maxiter=2000)
+W2 = WFromTraining(trainingSamples2, trainingSolutions2, alpha=0.01, maxiter=2000)
 
 
 def MSE(testSamples, testSolutions, W):
@@ -73,12 +82,23 @@ def confMatrix(testSamples, testSolutions, W):
 
     return confMatrix, nmisses/nsamples
 
+# First 30 for training, last 20 for testing
+print('First 30 for training, last 20 for testing\nW:\n', W1, '\n')
+ourMSE1 = MSE(testingSamples1,testingSolutions1,W1)
+print('MSE from our W = ', ourMSE1)
 
-ourMSE = MSE(testingSamples,testingSolutions,W)
+confMerrR1 = confMatrix(testingSamples1,testingSolutions1,W1)
 
-print('MSE from our W = ', ourMSE)
+print('First 30/20 confusion matrix : \n', confMerrR1[0])
+print('First 30/20 error rate : ', confMerrR1[1])
 
-confMerrR = confMatrix(testingSamples,testingSolutions,W)
 
-print('30/20 confusion matrix : \n',confMerrR[0])
-print('30/20 error rate : ',confMerrR[1])
+# Last 30 for training, first 20 for testing
+print('\n\nLast 30 for training, first 20 for testing:\nW:\n', W2, '\n')
+ourMSE1 = MSE(testingSamples1,testingSolutions1,W1)
+print('MSE from our W = ', ourMSE1)
+
+confMerrR2 = confMatrix(testingSamples1,testingSolutions1,W2)
+
+print('Last 30/20 confusion matrix : \n', confMerrR2[0])
+print('Last 30/20 error rate : ', confMerrR2[1])
