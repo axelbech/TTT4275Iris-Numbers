@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from printConfusion import print_confusion
 
 nSamples = 6000
-nTests = 500
+nTests = 200
 nClasses = 10
 nClusters = 64
 ourK = 7
@@ -190,6 +191,7 @@ def KNN(testSamples,templates,templateLabels,K=7):
         tstAns[testIt] = templateLabels[closestMatch]
     return tstAns, match
 
+
 # Code for saving the cluster data
 
 # clusters, clusterSol = clusters(img,lb,maxClusters=nClusters)
@@ -213,13 +215,21 @@ clusters = np.reshape(np.frombuffer(clustersB, dtype=np.uint8), (nClusters*nClas
 
 # Evaluation
 
-tstAnsandMatch = NN(tstimg,clusters,clusterSol)
+tstAnsandMatch = NN(tstimg,img,lb)  #clusters,clusterSol)
 NNtstAns = tstAnsandMatch[0]
 NNmatch = tstAnsandMatch[1]
 
-tstAnsandMatch = KNN(tstimg,clusters,clusterSol,K=ourK)
+# tstAnsandMatch = NN(tstimg,img[0:nClusters*nClasses],lb[0:nClusters*nClasses])
+# NNtstAns = tstAnsandMatch[0]
+# NNmatch = tstAnsandMatch[1]
+
+tstAnsandMatch = KNN(tstimg,img,lb)  #clusters,clusterSol,K=ourK)
 KNNtstAns = tstAnsandMatch[0]
 KNNmatch = tstAnsandMatch[1]
+
+# tstAnsandMatch = KNN(tstimg,img,lb,K=ourK)
+# KNNtstAns = tstAnsandMatch[0]
+# KNNmatch = tstAnsandMatch[1]
 
 # print('NN answers:\n',NNtstAns)
 # print('KNN answers:\n',NNtstAns)
@@ -232,11 +242,13 @@ KNNconfMerrR = confMatrix(KNNtstAns,tstlb)
 print('KNN confusion matrix with ',nClusters*nClasses,' references & ',nTests,' tests : \n',KNNconfMerrR[0])
 print('Error rate : ',KNNconfMerrR[1])
 
-# answerPlt = np.reshape(tstimg[3],(28,28))
-# solutionPlt = np.reshape(clusters[int(NNmatch[3])],(28,28))
+# print_confusion(KNNconfMerrR[0])
 
-answerPlt = np.reshape(img[110],(28,28))
-solutionPlt = np.reshape(clusters[576],(28,28))
+answerPlt = np.reshape(tstimg[3],(28,28))
+solutionPlt = np.reshape(clusters[int(NNmatch[3])],(28,28))
+
+# answerPlt = np.reshape(img[110],(28,28))
+# solutionPlt = np.reshape(clusters[576],(28,28))
 
 # plt.suptitle('')
 

@@ -76,7 +76,8 @@ def clusters(img, lb, maxClusters = 64):
                 eclDst = np.empty(maxClusters)
                 for sampleIt in range(classLength):
                     for clusterIt in range(maxClusters):
-                        eclDst[clusterIt] = np.linalg.norm(currentSamples[sampleIt] - currentClusters[clusterIt])
+                        eclDst[clusterIt]=np.linalg.norm(currentSamples[sampleIt]- \
+                            currentClusters[clusterIt])
                     currentSampleCluster = np.argmin(eclDst)
                     sampleOwnership[sampleIt] = currentSampleCluster
                 currAccDist = accumDist(currentSamples,currentClusters,sampleOwnership)
@@ -96,7 +97,8 @@ def clusters(img, lb, maxClusters = 64):
                                 mostPopularCluster = clusterIt
                     currentClusters[clusterIt] = currentClusters[clusterIt] / hits
             if amountOfClustersIt < maxClusters:
-                currentClusters[amountOfClustersIt] = currentClusters[mostPopularCluster] + (0.2*np.random.rand(784)-0.1)
+                currentClusters[amountOfClustersIt]=currentClusters[mostPopularCluster]+ \
+                    (0.2*np.random.rand(784)-0.1)
         for clusterIt in range(maxClusters):
             clusters[maxClusters*classIt+clusterIt] = currentClusters[clusterIt]
         # Alg from compendium end
@@ -189,10 +191,12 @@ KNNtstAns = tstAnsandMatch[0]
 KNNmatch = tstAnsandMatch[1]
 
 NNconfMerrR = confMatrix(NNtstAns,tstlb)
-print('NN Confusion matrix with ',nClusters*nClasses,' references & ',nTests,' tests : \n',NNconfMerrR[0])
+print('NN Confusion matrix with ',nClusters*nClasses,' references & ', \
+    nTests,' tests : \n',NNconfMerrR[0])
 print('Error rate : ',NNconfMerrR[1])
 KNNconfMerrR = confMatrix(KNNtstAns,tstlb)
-print('KNN confusion matrix with ',nClusters*nClasses,' references & ',nTests,' tests : \n',KNNconfMerrR[0])
+print('KNN confusion matrix with ',nClusters*nClasses,' references & ', \
+    nTests,' tests : \n',KNNconfMerrR[0])
 print('Error rate : ',KNNconfMerrR[1])
 
 answerPlt = np.reshape(tstimg[0],(28,28))
