@@ -27,6 +27,11 @@ W1 = WFromTraining(trainingSamples1, trainingSolutions1, alpha=0.01, maxiter=200
 W2 = WFromTraining(trainingSamples2, trainingSolutions2, alpha=0.01, maxiter=2000)
 
 
+# Histograms
+
+print(trainingSamples1)
+
+
 def MSE(testSamples, testSolutions, W):
     dataDims = np.shape(testSamples)
     nsamples = dataDims[0]
@@ -83,22 +88,24 @@ def confMatrix(testSamples, testSolutions, W):
     return confMatrix, nmisses/nsamples
 
 # First 30 for training, last 20 for testing
-print('First 30 for training, last 20 for testing\nW:\n', W1, '\n')
-ourMSE1 = MSE(testingSamples1,testingSolutions1,W1)
-print('MSE from our W = ', ourMSE1)
+#print('First 30 for training, last 20 for testing\nW:\n', W1, '\n')
+confMerrR1Training = confMatrix(trainingSamples1,trainingSolutions1,W1)
+confMerrR1Test = confMatrix(testingSamples1,testingSolutions1,W1)
 
-confMerrR1 = confMatrix(testingSamples1,testingSolutions1,W1)
+#print('First 30/20 confusion matrix : \n', confMerrR1Test[0])
+#print('First 30/20 error rate : ', confMerrR1Test[1])
 
-print('First 30/20 confusion matrix : \n', confMerrR1[0])
-print('First 30/20 error rate : ', confMerrR1[1])
+#print('Test\n\nFirst 30/20 confusion matrix : \n', confMerrR1Training[0])
+#print('First 30/20 error rate : ', confMerrR1Training[1])
 
 
 # Last 30 for training, first 20 for testing
-print('\n\nLast 30 for training, first 20 for testing:\nW:\n', W2, '\n')
-ourMSE1 = MSE(testingSamples1,testingSolutions1,W1)
-print('MSE from our W = ', ourMSE1)
+#print('\n\nLast 30 for training, first 20 for testing:\nW:\n', W2, '\n')
+confMerrR2Training = confMatrix(trainingSamples2,trainingSolutions2,W2)
+confMerrR2Test = confMatrix(testingSamples1,testingSolutions1,W2)
 
-confMerrR2 = confMatrix(testingSamples1,testingSolutions1,W2)
+#print('Last 30/20 confusion matrix : \n', confMerrR2Test[0])
+#print('Last 30/20 error rate : ', confMerrR2Test[1])
 
-print('Last 30/20 confusion matrix : \n', confMerrR2[0])
-print('Last 30/20 error rate : ', confMerrR2[1])
+#print('Test\n\nFirst 30/20 confusion matrix : \n', confMerrR2Training[0])
+#print('First 30/20 error rate : ', confMerrR2Training[1])
