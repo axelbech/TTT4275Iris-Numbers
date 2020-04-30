@@ -14,7 +14,8 @@ def WFromTraining(trainingData, solution, maxiter, alpha = 0.1): # training data
 
     paddedData = (np.concatenate(((trainingData.T),np.ones((1,nsamples))),axis=0)).T # add ones to the end of the feature samples for the modified form
 
-    W = 0.5 * np.random.rand(nclasses, nfeatures + 1) - 0.25 # Initialize W randomly OBS choice of start W can be crucial
+    # W = 0.5 * np.random.rand(nclasses, nfeatures + 1) - 0.25 # Initialize W randomly OBS choice of start W can be crucial
+    W = np.array([[0.4, 1.3, -2.0, -1.0, 0.3], [1.0, -2.0, 0.3, -1.4, 0.6], [-1.8, -1.7, 2.8, 2.4, -1.0]])
     g = np.zeros((nsamples,nclasses))
     for totalIt in range(maxiter): # perharps also another termination criteria?
         nabW = np.zeros((nclasses, nfeatures + 1))
